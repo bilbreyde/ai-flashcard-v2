@@ -10,11 +10,11 @@ function AppInner() {
   const [screen, setScreen] = useState("setup");
   const [questions, setQuestions] = useState([]);
   const [results, setResults] = useState([]);
-  const [lastConfig, setLastConfig] = useState(null);
+  const [certId, setCertId] = useState("google-ai-leadership");
 
-  const startQuiz = useCallback(({ questions: qs, count, categories }) => {
+  const startQuiz = useCallback(({ questions: qs, certId: cid }) => {
     setQuestions(qs);
-    setLastConfig({ count, categories });
+    setCertId(cid);
     setResults([]);
     setScreen("quiz");
   }, []);
@@ -33,7 +33,7 @@ function AppInner() {
       {screen === "setup" && <Setup onStart={startQuiz} />}
       {screen === "quiz" && <Quiz questions={questions} onFinish={finishQuiz} />}
       {screen === "summary" && (
-        <Summary results={results} onRestart={restart} onRetry={restart} />
+        <Summary results={results} certId={certId} onRestart={restart} onRetry={restart} />
       )}
     </div>
   );
