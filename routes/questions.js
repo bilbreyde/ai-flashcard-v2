@@ -1,15 +1,7 @@
 const express = require("express");
-const { AzureOpenAI } = require("openai");
 const auth = require("../middleware/auth");
 
 const router = express.Router();
-
-const client = new AzureOpenAI({
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiKey: process.env.AZURE_OPENAI_KEY,
-  apiVersion: process.env.AZURE_API_VERSION || "2025-01-01-preview",
-  deployment: process.env.AZURE_DEPLOYMENT_NAME,
-});
 
 router.post("/generate", auth, async (req, res) => {
   const { count = 10, weakCategories = [], certId = "google-ai-leadership" } = req.body;
@@ -51,19 +43,37 @@ Respond ONLY with a valid JSON array, no markdown, no preamble, no code fences:
 ]`;
 
   try {
-    const response = await client.chat.completions.create({
-      model: process.env.AZURE_DEPLOYMENT_NAME,
-      messages: [{ role: "user", content: prompt }],
-      max_completion_tokens: 4000,
+    const endpoint = process.env.AZURE_OPENAI_ENDPOINT.replace(/\/$/, "");
+    const deployment = process.env.AZURE_DEPLOYMENT_NAME;
+    const apiVersion = process.env.AZURE_API_VERSION || "2025-01-01-preview";
+    const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.AZURE_OPENAI_KEY,
+      },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: prompt }],
+        max_completion_tokens: 4000,
+      }),
     });
 
-    const raw = response.choices[0].message.content.trim();
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Azure API error:", response.status, errText);
+      return res.status(500).json({ error: "Failed to generate questions. Please try again." });
+    }
+
+    const data = await response.json();
+    const raw = data.choices[0].message.content.trim();
     const clean = raw.replace(/```json|```/g, "").trim();
     const questions = JSON.parse(clean);
 
     res.json({ questions });
   } catch (err) {
-    console.error("Question generation error:", err.message, err.status, JSON.stringify(err.error));
+    console.error("Question generation error:", err.message);
     res.status(500).json({ error: "Failed to generate questions. Please try again." });
   }
 });
