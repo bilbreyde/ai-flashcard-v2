@@ -56,7 +56,7 @@ Respond ONLY with a valid JSON array, no markdown, no preamble, no code fences:
       },
       body: JSON.stringify({
         messages: [{ role: "user", content: prompt }],
-        max_completion_tokens: 4000,
+        max_completion_tokens: 16000,
       }),
     });
 
