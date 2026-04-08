@@ -8,6 +8,10 @@ const CERT_NAMES = {
   "cisco-aitech": "Cisco AI Technical Practitioner (810-110 AITECH)",
   "hpe-ase-ai": "HPE ASE - AI Solutions",
   "aws-ai-practitioner": "AWS Certified AI Practitioner",
+  "sc-900": "Microsoft Security, Compliance & Identity Fundamentals (SC-900)",
+  "az-900": "Microsoft Azure Fundamentals (AZ-900)",
+  "az-500": "Microsoft Azure Security Engineer Associate (AZ-500)",
+  "ms-500": "Microsoft 365 Security Administrator Associate (MS-500)",
 };
 
 const CERT_CATEGORIES = {
@@ -15,6 +19,10 @@ const CERT_CATEGORIES = {
   "cisco-aitech": ["AI Fundamentals", "Machine Learning", "Neural Networks & Deep Learning", "AI Infrastructure", "AI Ethics & Governance", "AI Use Cases"],
   "hpe-ase-ai": ["AI Solution Architecture", "HPE AI Infrastructure", "Data Management", "MLOps & Deployment", "AI Performance & Optimization", "AI Security"],
   "aws-ai-practitioner": ["AI & ML Fundamentals", "AWS AI Services", "Generative AI on AWS", "Responsible AI on AWS", "AI Security & Compliance", "MLOps on AWS"],
+  "sc-900": ["Security Concepts", "Microsoft Entra & Identity", "Microsoft Defender", "Microsoft Purview & Compliance", "Azure Security Fundamentals", "Zero Trust & Governance"],
+  "az-900": ["Cloud Concepts", "Azure Architecture & Services", "Azure Compute & Networking", "Azure Storage", "Azure Identity & Access", "Azure Cost & Governance"],
+  "az-500": ["Identity & Access Management", "Platform Protection", "Security Operations", "Data & Application Security", "Microsoft Defender for Cloud", "Azure Key Vault & Secrets"],
+  "ms-500": ["Identity & Access Management", "Microsoft Defender XDR", "Microsoft Purview", "Information Protection & Compliance", "Privileged Identity Management", "Endpoint Security"],
 };
 
 router.post("/generate", auth, async (req, res) => {
