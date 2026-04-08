@@ -67,6 +67,7 @@ Respond ONLY with a valid JSON array, no markdown, no preamble, no code fences:
     }
 
     const data = await response.json();
+    console.log("Azure raw response:", JSON.stringify(data).substring(0, 1000));
     const raw = data.choices[0].message.content.trim();
     const clean = raw.replace(/```json|```/g, "").trim();
     const questions = JSON.parse(clean);
