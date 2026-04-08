@@ -402,3 +402,37 @@ export const QUESTIONS = [
 ];
 
 export const CATEGORIES = [...new Set(QUESTIONS.map((q) => q.category))];
+
+export const CERT_CONFIGS = {
+  "google-ai-leadership": [
+    "Responsible AI",
+    "Google AI Principles",
+    "LLM Concepts",
+    "AI Governance",
+    "AI Leadership",
+  ],
+  "cisco-aitech": [
+    "AI Fundamentals",
+    "Machine Learning",
+    "Neural Networks & Deep Learning",
+    "AI Infrastructure",
+    "AI Ethics & Governance",
+    "AI Use Cases",
+  ],
+  "hpe-ase-ai": [
+    "AI Solution Architecture",
+    "HPE AI Infrastructure",
+    "Data Management",
+    "MLOps & Deployment",
+    "AI Performance & Optimization",
+    "AI Security",
+  ],
+  "aws-ai-practitioner": [
+    "AI & ML Fundamentals",
+    "AWS AI Services",
+    "Generative AI on AWS",
+    "Responsible AI on AWS",
+    "AI Security & Compliance",
+    "MLOps on AWS",
+  ],
+};

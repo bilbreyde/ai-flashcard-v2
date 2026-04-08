@@ -1,19 +1,32 @@
 import { useState, useEffect } from "react";
 import { api } from "../api";
 import { useAuth } from "../context/AuthContext";
-import { CATEGORIES } from "../data/questions";
+import { CERT_CONFIGS } from "../data/questions";
+
+const CERTS = [
+  { id: "google-ai-leadership", label: "Google AI Leadership Certification" },
+  { id: "cisco-aitech", label: "Cisco AI Technical Practitioner (810-110 AITECH)" },
+  { id: "hpe-ase-ai", label: "HPE ASE - AI Solutions" },
+  { id: "aws-ai-practitioner", label: "AWS Certified AI Practitioner" },
+];
 
 export default function Setup({ onStart }) {
   const { user, logout } = useAuth();
+  const [certId, setCertId] = useState("google-ai-leadership");
   const [count, setCount] = useState(10);
   const [selectedCats, setSelectedCats] = useState([]);
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const cert = CERTS.find((c) => c.id === certId);
+  const categories = CERT_CONFIGS[certId] || CERT_CONFIGS["google-ai-leadership"];
+
   useEffect(() => {
-    api.getProgress().then(setProgress).catch(() => {});
-  }, []);
+    setSelectedCats([]);
+    setProgress(null);
+    api.getProgress(certId).then(setProgress).catch(() => {});
+  }, [certId]);
 
   const weakCategories = progress?.weakCategories || [];
 
@@ -23,6 +36,10 @@ export default function Setup({ onStart }) {
     );
   };
 
+  const loadingMsg = count <= 10
+    ? "~60 seconds"
+    : count <= 20 ? "~2 minutes" : "~3 minutes";
+
   const handleStart = async () => {
     setError("");
     setLoading(true);
@@ -30,9 +47,8 @@ export default function Setup({ onStart }) {
       const focusCategories = selectedCats.length > 0
         ? weakCategories.filter((w) => selectedCats.includes(w.category))
         : weakCategories;
-
-      const data = await api.generateQuestions(count, focusCategories, "google-ai-leadership");
-      onStart({ questions: data.questions, count, categories: selectedCats });
+      const data = await api.generateQuestions(count, focusCategories, certId);
+      onStart({ questions: data.questions, count, categories: selectedCats, certId });
     } catch (err) {
       setError("Could not generate questions. Please check your connection and try again.");
     } finally {
@@ -44,8 +60,8 @@ export default function Setup({ onStart }) {
     <div className="screen setup-screen">
       <div className="setup-topbar">
         <div>
-          <div className="badge">Google AI Leadership Certification</div>
           <h1 className="title">Practice Flashcards</h1>
+          <p className="app-meta">v1.0 · By Don Bilbrey · <a href="mailto:don.bilbrey@zones.com" className="meta-link">don.bilbrey@zones.com</a></p>
         </div>
         <div className="user-menu">
           <span className="user-email">{user?.email}</span>
@@ -53,37 +69,52 @@ export default function Setup({ onStart }) {
         </div>
       </div>
 
-      {progress && progress.totalSessions > 0 && (
-        <div className="progress-banner">
-          <div className="progress-banner-stats">
-            <div className="pb-stat">
-              <span className="pb-num">{progress.totalSessions}</span>
-              <span className="pb-lbl">Sessions</span>
-            </div>
-            <div className="pb-stat">
-              <span className="pb-num">
-                {progress.latest
-                  ? Math.round((progress.latest.score / progress.latest.total) * 100) + "%"
-                  : "—"}
-              </span>
-              <span className="pb-lbl">Last score</span>
-            </div>
-            <div className="pb-stat">
-              <span className="pb-num" style={{ color: weakCategories.length > 0 ? "var(--wrong)" : "var(--correct)" }}>
-                {weakCategories.length}
-              </span>
-              <span className="pb-lbl">Weak areas</span>
-            </div>
-          </div>
-          {weakCategories.length > 0 && (
-            <p className="focus-note">
-              AI will focus on: <strong>{weakCategories.map((w) => w.category).join(", ")}</strong>
-            </p>
-          )}
-        </div>
-      )}
-
       <div className="setup-card">
+        <div className="field">
+          <label className="field-label">Certification</label>
+          <div className="cert-grid">
+            {CERTS.map((c) => (
+              <button
+                key={c.id}
+                className={`cert-chip ${certId === c.id ? "active" : ""}`}
+                onClick={() => setCertId(c.id)}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {progress && progress.totalSessions > 0 && (
+          <div className="progress-banner">
+            <div className="progress-banner-stats">
+              <div className="pb-stat">
+                <span className="pb-num">{progress.totalSessions}</span>
+                <span className="pb-lbl">Sessions</span>
+              </div>
+              <div className="pb-stat">
+                <span className="pb-num">
+                  {progress.latest
+                    ? Math.round((progress.latest.score / progress.latest.total) * 100) + "%"
+                    : "—"}
+                </span>
+                <span className="pb-lbl">Last score</span>
+              </div>
+              <div className="pb-stat">
+                <span className="pb-num" style={{ color: weakCategories.length > 0 ? "var(--wrong)" : "var(--correct)" }}>
+                  {weakCategories.length}
+                </span>
+                <span className="pb-lbl">Weak areas</span>
+              </div>
+            </div>
+            {weakCategories.length > 0 && (
+              <p className="focus-note">
+                AI will focus on: <strong>{weakCategories.map((w) => w.category).join(", ")}</strong>
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="field">
           <div className="field-header">
             <label className="field-label">Number of questions</label>
@@ -101,7 +132,7 @@ export default function Setup({ onStart }) {
           <label className="field-label">Focus on specific categories</label>
           <p className="field-hint">Leave all unselected to let the AI decide based on your weak areas.</p>
           <div className="category-grid">
-            {CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const weak = weakCategories.find((w) => w.category === cat);
               return (
                 <button
@@ -121,7 +152,16 @@ export default function Setup({ onStart }) {
 
         <div className="setup-footer">
           <span className="pool-info">
-            {loading ? "Generating adaptive questions…" : "Questions generated by AI based on your history"}
+            {loading ? (
+              <span>
+                Generating {count} adaptive questions…<br />
+                <span style={{ fontSize: "12px", opacity: 0.75 }}>
+                  o4-mini takes {loadingMsg} to reason through your weak areas
+                </span>
+              </span>
+            ) : (
+              "Questions generated by AI · Adapts to your weak areas"
+            )}
           </span>
           <button className="primary-btn" onClick={handleStart} disabled={loading}>
             {loading ? "Generating…" : "Start quiz →"}

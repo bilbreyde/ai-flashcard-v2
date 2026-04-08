@@ -3,24 +3,37 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
+const CERT_NAMES = {
+  "google-ai-leadership": "Google AI Leadership Certification",
+  "cisco-aitech": "Cisco AI Technical Practitioner (810-110 AITECH)",
+  "hpe-ase-ai": "HPE ASE - AI Solutions",
+  "aws-ai-practitioner": "AWS Certified AI Practitioner",
+};
+
+const CERT_CATEGORIES = {
+  "google-ai-leadership": ["Responsible AI", "Google AI Principles", "LLM Concepts", "AI Governance", "AI Leadership"],
+  "cisco-aitech": ["AI Fundamentals", "Machine Learning", "Neural Networks & Deep Learning", "AI Infrastructure", "AI Ethics & Governance", "AI Use Cases"],
+  "hpe-ase-ai": ["AI Solution Architecture", "HPE AI Infrastructure", "Data Management", "MLOps & Deployment", "AI Performance & Optimization", "AI Security"],
+  "aws-ai-practitioner": ["AI & ML Fundamentals", "AWS AI Services", "Generative AI on AWS", "Responsible AI on AWS", "AI Security & Compliance", "MLOps on AWS"],
+};
+
 router.post("/generate", auth, async (req, res) => {
   const { count = 10, weakCategories = [], certId = "google-ai-leadership" } = req.body;
+
+  const certName = CERT_NAMES[certId] || CERT_NAMES["google-ai-leadership"];
+  const categories = CERT_CATEGORIES[certId] || CERT_CATEGORIES["google-ai-leadership"];
 
   const weakFocus =
     weakCategories.length > 0
       ? `The user is struggling most with these categories (focus more questions here):\n${weakCategories.map((w) => `- ${w.category} (${w.accuracy}% accuracy)`).join("\n")}`
       : "The user has no prior history — generate a balanced set across all categories.";
 
-  const prompt = `You are an expert exam question writer for the Google AI Leadership certification.
+  const prompt = `You are an expert exam question writer for the ${certName} certification.
 
 Generate exactly ${count} multiple-choice questions. ${weakFocus}
 
 Categories to draw from:
-- Responsible AI
-- Google AI Principles
-- LLM Concepts
-- AI Governance
-- AI Leadership
+${categories.map((c) => `- ${c}`).join("\n")}
 
 Rules for every question:
 1. Each question must have exactly 4 answer options
@@ -67,7 +80,6 @@ Respond ONLY with a valid JSON array, no markdown, no preamble, no code fences:
     }
 
     const data = await response.json();
-    console.log("Azure raw response:", JSON.stringify(data).substring(0, 1000));
     const raw = data.choices[0].message.content.trim();
     const clean = raw.replace(/```json|```/g, "").trim();
     const questions = JSON.parse(clean);
